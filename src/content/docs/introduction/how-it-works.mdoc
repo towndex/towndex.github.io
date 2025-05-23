@@ -1,0 +1,79 @@
+---
+description: Step-by-step guide to how Towndex works
+sidebar:
+    order: 2
+title: How it works
+---
+
+Towndex works by:
+1. **extracting and synthesizing** information from local government documents
+2. **integrating** information from multiple documents
+3. **generating** a browsable and searchable website using that information
+
+## 1. Extraction and synthesis
+
+Towndex extracts the content of a document and uses a [large language model](https://en.wikipedia.org/wiki/Large_language_model) to synthesize a [schema.org](https://schema.org)-based [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph) reflecting document contents. 
+
+{% card title="Document (excerpt)" %}
+
+```
+REPORTS:
+Town Clerk: Rebecca Del Gaizo
+Ms. Del Gaizo gave the report for the month of December. $7,441.77 will be remitted to the
+Supervisor's office. Rounding numbers, recycling fees accounted for $6,022, Community Center
+fees for $800.00, Dog License fees for $220.00 and $399.00 in miscellaneous fees making up the
+balance. The Community Center had 4 new reservations. Our share of $1,330.59 in DEC sales
+was $24.41. Motion to accept the report was made by Councilman Cipperly and seconded by
+Councilman Balistreri. Unanimously approved. A copy of the written report is on file in the
+Town Clerk's Office.
+```
+
+{% /card %}
+
+{% card title="Synthesized knowledge graph (excerpt)" %}
+
+```turtle
+<http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report> a schema:Report;
+    schema:name "Town Clerk Report";
+    schema:description "Report for December with $7,441.77 remitted to the Supervisor's office.";
+    schema:subjectOf <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports>;
+    schema:about <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report/monetary-amount/7441-77>;
+    schema:author <http://purl.org/towndex/instance/us/ny/brunswick/person/rebecca-del-gaizo>.
+```
+
+{% /card %}
+
+## 2. Integration
+
+Towndex coalesces the synthesized knowledge graphs derived from different documents into a single knowledge graph. [Events](https://schema.org/Event), [reports](https://schema.org/Report), and other transient entities are identified within the namespaces of documents, while [organizations](https://schema.org/Organization), [people](https://schema.org/Person), [places](https://schema.org/Place), and other permanent entities have identifiers in a global namespace.
+
+```turtle
+<https://townofbrunswick.org/files/TBMeetingMinutes20250109.pdf> {
+    <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report> a schema:Report;
+        schema:name "Town Clerk Report";
+        schema:description "Report for December with $7,441.77 remitted to the Supervisor's office.";
+        schema:subjectOf <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports>;
+        schema:about <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/01/09/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report/monetary-amount/7441-77>;
+        schema:author <http://purl.org/towndex/instance/us/ny/brunswick/person/rebecca-del-gaizo>.
+}
+
+<https://townofbrunswick.org/files/TBMeetingMinutes20250213.pdf> {
+    <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/02/13/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report> a schema:Report;
+        schema:name "Town Clerk Report";
+        schema:subjectOf <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/02/13/town-of-brunswick-regular-town-board-meeting/event/reports>;
+        schema:description "Report for the month of January with various fees collected and reservations made.";
+        schema:about <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/02/13/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report/monetary-amount/7450-17>, <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/02/13/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report/quantitative-value/community-center-reservations>, <http://purl.org/towndex/instance/us/ny/brunswick/event/2025/02/13/town-of-brunswick-regular-town-board-meeting/event/reports/report/town-clerk-report/quantitative-value/pavilion-events>;
+        schema:author <http://purl.org/towndex/instance/us/ny/brunswick/person/rebecca-del-gaizo>.
+}
+
+<http://purl.org/towndex/instance/us/ny/brunswick/person/rebecca-del-gaizo> a schema:Person;
+    schema:name "Rebecca Del Gaizo".
+```
+
+## 3. Site generation
+
+Finally, Towndex generates a static website from the integrated knowledge graph using [Next.js](https://nextjs.org). The website can be deployed to any static file host, such as [GitHub Pages](https://pages.github.com) (free) or [Amazon S3](https://aws.amazon.com/s3/) (low cost).
+
+A [demo site](https://towndex.github.io/us-ny-brunswick/en) for the town of Brunswick, NY is hosted on GitHub Pages.
+
+![Reports screenshot](../../../assets/us-ny-brunswick-reports-screenshot.png)
